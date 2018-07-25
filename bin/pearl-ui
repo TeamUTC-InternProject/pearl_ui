@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+
+import pearl_ui
+
+if __name__ == "__main__":
+    pearl_ui.main()
+

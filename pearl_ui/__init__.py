@@ -1,2 +1,2 @@
-from .gui import main
+from .spectrogram import main
 
