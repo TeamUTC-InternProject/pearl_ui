@@ -16,5 +16,5 @@ User interface for PEARL threat detection system
 
 4. Run the GUI:
 
-    `pearl-ui`
+    `$ pearl-ui`
 
