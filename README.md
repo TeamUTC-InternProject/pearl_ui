@@ -1,6 +1,14 @@
 # pearl_ui
 User interface for PEARL threat detection system
 
+### Requirements
+#### You need the following libraries installed:
+
+- matplotlib, a library for plotting data
+- NumPy, a library for numberic computing
+- PySide2, a Python binding to the Qt user interface library
+- pySerial, a library for serial code IO
+
 ### Installation
 1. Install and open Git Bash
 
