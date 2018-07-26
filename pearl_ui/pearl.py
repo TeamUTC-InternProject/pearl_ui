@@ -6,6 +6,6 @@ from . pearlUI import MainWindow
 
 def main():
     app = QApplication([])
-    ui = MainWindow()
+    ui = MainWindow([])
     sys.exit(app.exec_())
 
