@@ -1,16 +1,19 @@
 # User interface for Pearl program.
 
-from PySide2 import QtCore, QtWidgets
-import matplotlib
-matplotlib.use('Qt5Agg')
-matplotlib.rcParams['backend.qt5']='PySide2'
-from matplotlib.animation import FuncAnimation
+import numpy as np
+
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, 
+        QDialogButtonBox, QPushButton, QWidget, QLabel, QComboBox, 
+        QGroupBox, QGridLayout, QSlider)
+
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from matplotlib.animation import FuncAnimation
 from matplotlib.cm import get_cmap
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import MultipleLocator, FuncFormatter
-import numpy as np
 
 # Add global version number/name
 VERSION = 'Pearl v0.1'
@@ -106,13 +109,13 @@ class PearlCanvas(FigureCanvas):
             return ()
 
 
-class MainWindow(QtWidgets.QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self, devices):
         """Set up the main window."""
         super(MainWindow, self).__init__()
         self.devices = devices
         self.openDevice = None
-        main = QtWidgets.QWidget()
+        main = QWidget()
         main.setLayout(self._setupMainLayout())
         self.setCentralWidget(main)
         self.status = self.statusBar()
@@ -148,22 +151,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _communicationError(self, error):
         # Error communicating with device, shut it down if possible.
-        mb = QtWidgets.QMessageBox()
+        mb = QMessageBox()
         mb.setText('Error communicating with device! %s'%error)
         mb.exec_()
         self._closeDevice()
 
     def _setupMainLayout(self):
-        controls = QtWidgets.QVBoxLayout()
-        controls.addWidget(QtWidgets.QLabel('<h3>%s</h3>'%VERSION))
-        author = QtWidgets.QLabel('by <a href="https://github.com/TeamUTC-InternProject/">Team Underwater Treasure Chest</a>')
+        controls = QVBoxLayout()
+        controls.addWidget(QLabel('<h3>%s</h3>'%VERSION))
+        author = QLabel('by <a href="https://github.com/TeamUTC-InternProject/">Team Underwater Treasure Chest</a>')
         author.setOpenExternalLinks(True)
         controls.addWidget(author)
         controls.addSpacing(10)
         for control in self._setupControls():
             controls.addWidget(control)
         controls.addStretch(1)
-        layout = QtWidgets.QHBoxLayout()
+        layout = QHBoxLayout()
         layout.addLayout(controls)
         self.pearl = PearlCanvas(self)
         layout.addWidget(self.pearl)
@@ -171,38 +174,38 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _setupControls(self):
         # Set up device group        
-        deviceCombo = QtWidgets.QComboBox()
+        deviceCombo = QComboBox()
         for device in sorted(self.devices, key=lambda a: a.get_name()):
             deviceCombo.addItem(device.get_name(), userData=device)
-        deviceBtn = QtWidgets.QPushButton('Open')
+        deviceBtn = QPushButton('Open')
         deviceBtn.clicked.connect(self._deviceButton)
         self.deviceCombo = deviceCombo
         self.deviceBtn = deviceBtn
-        device = QtWidgets.QGroupBox('Device')
-        device.setLayout(QtWidgets.QGridLayout())
-        device.layout().addWidget(QtWidgets.QLabel('Serial Port:'), 0, 0)
+        device = QGroupBox('Device')
+        device.setLayout(QGridLayout())
+        device.layout().addWidget(QLabel('Serial Port:'), 0, 0)
         device.layout().addWidget(deviceCombo, 0, 1)
         device.layout().addWidget(deviceBtn, 1, 1)
         # Set up device parameters group
-        fftSize = QtWidgets.QLabel()
-        sampleRate = QtWidgets.QLabel()
-        modifyBtn = QtWidgets.QPushButton('Modify')
+        fftSize = QLabel()
+        sampleRate = QLabel()
+        modifyBtn = QPushButton('Modify')
         modifyBtn.clicked.connect(self._modifyButton)
         self.fftSize = fftSize
         self.sampleRate = sampleRate
         self.modifyBtn = modifyBtn
-        parameters = QtWidgets.QGroupBox('Device Parameters')
-        parameters.setLayout(QtWidgets.QGridLayout())
-        parameters.layout().addWidget(QtWidgets.QLabel('FFT Size:'), 0, 0)
+        parameters = QGroupBox('Device Parameters')
+        parameters.setLayout(QGridLayout())
+        parameters.layout().addWidget(QLabel('FFT Size:'), 0, 0)
         parameters.layout().addWidget(fftSize, 0, 1)
-        parameters.layout().addWidget(QtWidgets.QLabel('Sample Rate:'), 1, 0)
+        parameters.layout().addWidget(QLabel('Sample Rate:'), 1, 0)
         parameters.layout().addWidget(sampleRate, 1, 1)
         parameters.layout().addWidget(modifyBtn, 2, 1)
         parameters.setDisabled(True)
         self.parameters = parameters
         # Set up graph values group
-        lowSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
-        highSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        lowSlider = QSlider(QtCore.Qt.Orientation.Horizontal)
+        highSlider = QSlider(QtCore.Qt.Orientation.Horizontal)
         lowSlider.setRange(0, 100)
         lowSlider.setValue(20)
         lowSlider.valueChanged.connect(self._sliderChanged)
@@ -211,14 +214,14 @@ class MainWindow(QtWidgets.QMainWindow):
         highSlider.valueChanged.connect(self._sliderChanged)
         self.lowSlider = lowSlider
         self.highSlider = highSlider
-        self.lowValue = QtWidgets.QLabel()
-        self.highValue = QtWidgets.QLabel()
-        graphs = QtWidgets.QGroupBox('Graphs')
-        graphs.setLayout(QtWidgets.QGridLayout())
-        graphs.layout().addWidget(QtWidgets.QLabel('Intensity Min:'), 0, 0)
+        self.lowValue = QLabel()
+        self.highValue = QLabel()
+        graphs = QGroupBox('Graphs')
+        graphs.setLayout(QGridLayout())
+        graphs.layout().addWidget(QLabel('Intensity Min:'), 0, 0)
         graphs.layout().addWidget(self.lowValue, 0, 1)
         graphs.layout().addWidget(lowSlider, 1, 0, 1, 2)
-        graphs.layout().addWidget(QtWidgets.QLabel('Intensity Max:'), 2, 0)
+        graphs.layout().addWidget(QLabel('Intensity Max:'), 2, 0)
         graphs.layout().addWidget(self.highValue, 2, 1)
         graphs.layout().addWidget(highSlider, 3, 0, 1, 2)
         return (device, parameters, graphs)
@@ -232,22 +235,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _modifyButton(self):
         # Create dialog
-        dialog = QtWidgets.QDialog(self)
+        dialog = QDialog(self)
         dialog.setModal(True)
-        sampleRate = QtWidgets.QSpinBox()
+        sampleRate = QSpinBox()
         sampleRate.setRange(1,9000)
         sampleRate.setValue(self.openDevice.get_samplerate())
-        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
-        dialog.setLayout(QtWidgets.QVBoxLayout())
-        dialog.layout().addWidget(QtWidgets.QLabel('Sample Rate (hz):'))
+        dialog.setLayout(QVBoxLayout())
+        dialog.layout().addWidget(QLabel('Sample Rate (hz):'))
         dialog.layout().addWidget(sampleRate)
         dialog.layout().addWidget(buttons)
         dialog.setWindowTitle('Modify Device')
         # Show dialog and update device & UI based on results.
         try:
-            if dialog.exec_() == QtWidgets.QDialog.Accepted:
+            if dialog.exec_() == QDialog.Accepted:
                 self.openDevice.set_samplerate(sampleRate.value())
                 self._updateDeviceUI()
         except IOError as e:
