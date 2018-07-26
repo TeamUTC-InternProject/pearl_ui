@@ -1,2 +1,2 @@
-from .spectrogram import main
+from .pearl import main
 
