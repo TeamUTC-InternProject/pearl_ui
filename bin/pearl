@@ -3,5 +3,5 @@
 import pearl_ui
 
 if __name__ == "__main__":
-    pearl_ui.main()
+    pearl_ui.pearl_main()
 

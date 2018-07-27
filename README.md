@@ -9,6 +9,10 @@ User interface for PEARL threat detection system
 - PyQt5, a Python binding to the Qt user interface library
 - pySerial, a library for serial code IO
 
+To install library run:
+
+    `$ pip3 install <library>`
+
 ### Installation
 1. Install and open Git Bash
 
@@ -24,5 +28,5 @@ User interface for PEARL threat detection system
 
 4. Run the GUI:
 
-    `$ pearl-ui`
+    `$ pearl`
 

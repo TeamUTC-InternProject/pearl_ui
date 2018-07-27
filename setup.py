@@ -8,6 +8,6 @@ setup(name='pearl_ui',
       author_email='chris.evers92@gmail.com',
       license='MIT',
       packages=['pearl_ui'],
-      scripts=['bin/pearl-ui'],
+      scripts=['bin/pearl'],
       zip_safe=False)
 

@@ -5,7 +5,7 @@ import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, 
         QDialogButtonBox, QPushButton, QWidget, QLabel, QComboBox, 
-        QGroupBox, QGridLayout, QSlider)
+        QGroupBox, QGridLayout, QSlider, QDialog, QSpinBox, QMessageBox)
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -18,25 +18,25 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter
 # Add global version number/name
 VERSION = 'Pearl v0.1'
 
-class PearlCanvas(FigureCanvas):
+class SpectrogramCanvas(FigureCanvas):
     def __init__(self, window):
-        """Initialize pearl canvas graphs."""
+        """Initialize spectrogram canvas graphs."""
         # Initialize variables to default values.
         self.window = window
-        self.samples = 100  # Number of samples to store
-        self.fftSize = 256  # Initial FFT size just to render something in the carts
+        self.samples = 100 # Number of samples to store
+        self.fftSize = 256 # Initial FFT size just to render something in the charts
         self.sampleRate = 0
         self.binFreq = 0
-        self.binCount = self.fftSize // 2
-        self.graphUpdateHz = 10  # Update rate of the animation
+        self.binCount = self.fftSize//2
+        self.graphUpdateHz = 10 # Update rate of the animation
         self.coloredBin = None
         self.magnitudes = np.zeros((self.samples, self.binCount))
         # Tell numpy to ignore errors like taking the log of 0
         np.seterr(all='ignore')
-        # Set up figure to old plots
-        self.figure = Figure(figsize=(1024,768), dpi=72, facecolor=(1, 1, 1), edgecolor=(0, 0, 0))
+        # Set up figure to hold plots
+        self.figure = Figure(figsize=(1024,768), dpi=72, facecolor=(1,1,1), edgecolor=(0,0,0))
         # Set up 4x4 grid to hold 2 plots and colorbar
-        gs = GridSpec(2, 2, height_ratios=[1, 2], width_ratios=[9.5, 0.5])
+        gs = GridSpec(2, 2, height_ratios=[1,2], width_ratios=[9.5, 0.5])
         gs.update(left=0.075, right=0.925, bottom=0.05, top=0.95, wspace=0.05)
         # Set up frequency histogram bar plot
         self.histAx = self.figure.add_subplot(gs[0])
@@ -54,15 +54,36 @@ class PearlCanvas(FigureCanvas):
         self.spectPlot = self.spectAx.imshow(self.magnitudes, aspect='auto', cmap=get_cmap('jet'))
         # Add formatter to translate position to age in seconds
         self.spectAx.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: '%d' % (x*(1.0/self.graphUpdateHz))))
-        # Setup spectrogram color bar
+        # Set up spectrogram color bar
         cbAx = self.figure.add_subplot(gs[3])
         self.figure.colorbar(self.spectPlot, cax=cbAx, use_gridspec=True, format=FuncFormatter(lambda x, pos: '%d' % (x*100.0)))
         cbAx.set_ylabel('Intensity (decibels)')
         # Initialize canvas
-        super(PearlCanvas, self).__init__(self.figure)
+        super(SpectrogramCanvas, self).__init__(self.figure)
         # Hook up mouse and animation events
         self.mpl_connect('motion_notify_event', self._mouseMove)
         self.ani = FuncAnimation(self.figure, self._update, interval=1000.0/self.graphUpdateHz, blit=False)
+
+    def updateParameters(self, fftSize, sampleRate):
+        """Update the FFT size and sample rate parameters to redraw the charts appropriately."""
+        # Update variables to new values.
+        self.fftSize = fftSize
+        self.sampleRate = sampleRate
+        self.binCount = self.fftSize//2
+        self.binFreq = self.sampleRate/float(self.fftSize)
+        # Remove old bar plot.
+        for bar in self.histPlot:
+            bar.remove()
+        # Update data for charts.
+        self.histPlot = self.histAx.bar(np.arange(self.binCount), np.zeros(self.binCount), width=1.0, linewidth=0.0, facecolor='blue')
+        self.magnitudes = np.zeros((self.samples, self.binCount))
+        # Update frequency x axis to have 5 evenly spaced ticks from 0 to sampleRate/2.
+        ticks = np.floor(np.linspace(0, self.binCount, 5))
+        labels = ['%d hz' % i for i in np.linspace(0, self.sampleRate/2.0, 5)]
+        self.histAx.set_xticks(ticks)
+        self.histAx.set_xticklabels(labels)
+        self.spectAx.set_xticks(ticks)
+        self.spectAx.set_xticklabels(labels)
 
     def updateIntensityRange(self, low, high):
         """Adjust low and high intensity limits for histogram and spectrum axes."""
@@ -71,10 +92,10 @@ class PearlCanvas(FigureCanvas):
 
     def _mouseMove(self, event):
         # Update the selected frequency bin if the mouse is over a plot.
-        # Check if sampleRate is not 0 so the status bar isn't update if the spectrogram hasn't ever been started.
+        # Check if sampleRate is not 0 so the status bar isn't updated if the spectrogram hasn't ever been started.
         if self.sampleRate != 0 and (event.inaxes == self.histAx or event.inaxes == self.spectAx):
             bin = int(event.xdata)
-            self.window.updateState('Frequency bin %d: %.0f hz to $.0f hz' % (bin, bin*self.binFreq, (bin+1)*self.binFreq))
+            self.window.updateStatus('Frequency bin %d: %.0f hz to %.0f hz' % (bin, bin*self.binFreq, (bin+1)*self.binFreq))
             # Highlight selected frequency in red
             if self.coloredBin != None:
                 self.histPlot[self.coloredBin].set_facecolor('blue')
@@ -90,15 +111,15 @@ class PearlCanvas(FigureCanvas):
         # Get a list of recent magnitudes from the open device.
         mags = self.window.getMagnitudes()
         if mags != None:
-            # Convert magnitudes to decibels. Also skip the first value because it's
+            # Convert magnitudes to decibels.  Also skip the first value because it's
             # the average power of the signal, and only grab the first half of values
             # because the second half is for negative frequencies (which don't apply
             # to an FFT run on real data).
-            mags = 20.0*np.log10(mags[1:len(mags)/2+1])
+            mags = 20.0*np.log10(mags[1:len(mags)//2+1])
             # Update histogram bar heights based on magnitudes.
             for bin, mag in zip(self.histPlot, mags):
                 bin.set_height(mag)
-            # Roll samples forward and save the most recent sample. Note that image
+            # Roll samples forward and save the most recent sample.  Note that image
             # samples are scaled to 0 to 1.
             self.magnitudes = np.roll(self.magnitudes, 1, axis=0)
             self.magnitudes[0] = mags/100.0
@@ -111,7 +132,9 @@ class PearlCanvas(FigureCanvas):
 
 class MainWindow(QMainWindow):
     def __init__(self, devices):
-        """Set up the main window."""
+        """Set up the main window.  
+           Devices should be a list of items that implement the SpectrogramDevice interface.
+        """
         super(MainWindow, self).__init__()
         self.devices = devices
         self.openDevice = None
@@ -119,9 +142,9 @@ class MainWindow(QMainWindow):
         main.setLayout(self._setupMainLayout())
         self.setCentralWidget(main)
         self.status = self.statusBar()
-        self.setGeometry(10, 10, 1024, 768)
+        self.setGeometry(10,10,1024,768)
         self.setWindowTitle(VERSION)
-        self._sliderChanged(0)  # Force graphs to update their limits with initial values.
+        self._sliderChanged(0) # Force graphs to update their limits with initial values.
         self.show()
 
     def closeEvent(self, event):
@@ -131,12 +154,12 @@ class MainWindow(QMainWindow):
         event.accept()
 
     def updateStatus(self, message=''):
-        """Update the status bar of the window with the provided message text."""
+        """Update the status bar of the widnow with the provided message text."""
         self.status.showMessage(message)
 
     def getMagnitudes(self):
-        """Get a list of magnitudes if the device is open, or None if the device is not open.
-        There are FFT size number of magnitudes.
+        """Get a list of magnitudes if the device is open, or None if the device is not open.  
+           There are FFT size number of magnitudes.
         """
         try:
             if self.isDeviceOpen():
@@ -152,14 +175,14 @@ class MainWindow(QMainWindow):
     def _communicationError(self, error):
         # Error communicating with device, shut it down if possible.
         mb = QMessageBox()
-        mb.setText('Error communicating with device! %s'%error)
+        mb.setText('Error communicating with device! %s' % error)
         mb.exec_()
         self._closeDevice()
 
     def _setupMainLayout(self):
         controls = QVBoxLayout()
-        controls.addWidget(QLabel('<h3>%s</h3>'%VERSION))
-        author = QLabel('by <a href="https://github.com/TeamUTC-InternProject/">Team Underwater Treasure Chest</a>')
+        controls.addWidget(QLabel('<h3>%s</h3>' % VERSION))
+        author = QLabel('by <a href="http://www.github.com/tdicola/">Tony DiCola</a>')
         author.setOpenExternalLinks(True)
         controls.addWidget(author)
         controls.addSpacing(10)
@@ -168,8 +191,8 @@ class MainWindow(QMainWindow):
         controls.addStretch(1)
         layout = QHBoxLayout()
         layout.addLayout(controls)
-        self.pearl = PearlCanvas(self)
-        layout.addWidget(self.pearl)
+        self.spectrogram = SpectrogramCanvas(self)
+        layout.addWidget(self.spectrogram)
         return layout
 
     def _setupControls(self):
@@ -256,6 +279,31 @@ class MainWindow(QMainWindow):
         except IOError as e:
             self._communicationError(e)
 
+    def _updateDeviceUI(self):
+        # Update UI to reflect current state of device.
+        sampleRate = self.openDevice.get_samplerate()
+        fftSize = self.openDevice.get_fftsize()
+        self.fftSize.setText('%d' % fftSize)
+        self.sampleRate.setText('%d hz' % sampleRate)
+        self.spectrogram.updateParameters(fftSize, sampleRate)
+
+    def _openDevice(self):
+        try:
+            # Open communication with selected device.
+            device = self.deviceCombo.itemData(self.deviceCombo.currentIndex())
+            self.updateStatus('Opening device %s...' % device.get_name())
+            device.open()
+            self.openDevice = device
+            self.updateStatus('Communication with device %s established.' % device.get_name())
+            # Update UI with data from open device.
+            self._updateDeviceUI()
+            self.parameters.setDisabled(False)
+            self.deviceCombo.setDisabled(True)
+            self.deviceBtn.setText('Close')
+        except IOError as e:
+            self.updateStatus() # Clear status bar
+            self._communicationError(e)
+
     def _closeDevice(self):
         try:
             # Close the device if it's open.
@@ -279,5 +327,4 @@ class MainWindow(QMainWindow):
         self.lowValue.setText('%d dB' % low)
         self.highValue.setText('%d dB' % high)
         # Adjust chart UI with new slider values.
-        self.pearl.updateIntensityRange(low, high)
-
+        self.spectrogram.updateIntensityRange(low, high)
