@@ -182,7 +182,7 @@ class MainWindow(QMainWindow):
     def _setupMainLayout(self):
         controls = QVBoxLayout()
         controls.addWidget(QLabel('<h3>%s</h3>' % VERSION))
-        author = QLabel('by <a href="http://www.github.com/tdicola/">Tony DiCola</a>')
+        author = QLabel('by <a href="https://github.com/TeamUTC-InternProject">Team Underwater Treasure Chest</a>')
         author.setOpenExternalLinks(True)
         controls.addWidget(author)
         controls.addSpacing(10)
