@@ -247,7 +247,34 @@ class MainWindow(QMainWindow):
         graphs.layout().addWidget(QLabel('Intensity Max:'), 2, 0)
         graphs.layout().addWidget(self.highValue, 2, 1)
         graphs.layout().addWidget(highSlider, 3, 0, 1, 2)
-        return (device, parameters, graphs)
+
+        modeCombo = QComboBox(self)
+        modeCombo.addItem("eACTIVE_MODE_S1")
+        modeCombo.addItem("eACTIVE_MODE_S2")
+        modeCombo.addItem("eACTIVE_MODE_S3")
+        modeCombo.addItem("eACTIVE_MODE_S4")
+        modeCombo.addItem("eACTIVE_MODE_S5")
+        modeCombo.addItem("eLISTEN_MODE")
+        modeCombo.addItem("eENV_DATA")
+        modeCombo.addItem("eCONTACT_DATA")
+        self.modeCombo = modeCombo
+
+        switchModeBtn = QPushButton('Switch Mode')
+        switchModeBtn.clicked.connect(self._switchModeButton)
+        self.switchModeBtn = switchModeBtn
+
+        mode = QGroupBox('Modes')
+        mode.setLayout(QGridLayout())
+        mode.layout().addWidget(QLabel('Mode:'), 0, 0)
+        mode.layout().addWidget(modeCombo, 0, 1)
+        mode.layout().addWidget(switchModeBtn, 1, 1)
+
+
+        return (device, parameters, graphs, mode)
+
+    def _switchModeButton(self):
+        #do work
+        print("coolio")
 
     def _deviceButton(self):
         # Toggle between opening and closing the device.
