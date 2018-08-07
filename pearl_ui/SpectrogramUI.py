@@ -3,9 +3,9 @@
 import numpy as np
 
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, 
-        QDialogButtonBox, QPushButton, QWidget, QLabel, QComboBox, 
-        QGroupBox, QGridLayout, QSlider, QDialog, QSpinBox, QMessageBox)
+from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout,
+                             QDialogButtonBox, QPushButton, QWidget, QLabel, QComboBox,
+                             QGroupBox, QGridLayout, QSlider, QDialog, QSpinBox, QMessageBox)
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -17,26 +17,29 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter
 
 # Add global version number/name
 VERSION = 'Pearl v0.1'
+MODES = {"eACTIVE_MODE_S1": 1, "eACTIVE_MODE_S2": 2, "eACTIVE_MODE_S3": 3, "eACTIVE_MODE_S4": 4,
+              "eACTIVE_MODE_S5": 5, "eLISTEN_MODE": 6, "eENV_DATA": 7, "eCONTACT_DATA": 8}
+
 
 class SpectrogramCanvas(FigureCanvas):
     def __init__(self, window):
         """Initialize spectrogram canvas graphs."""
         # Initialize variables to default values.
         self.window = window
-        self.samples = 100 # Number of samples to store
-        self.fftSize = 256 # Initial FFT size just to render something in the charts
+        self.samples = 100  # Number of samples to store
+        self.fftSize = 256  # Initial FFT size just to render something in the charts
         self.sampleRate = 0
         self.binFreq = 0
-        self.binCount = self.fftSize//2
-        self.graphUpdateHz = 10 # Update rate of the animation
+        self.binCount = self.fftSize // 2
+        self.graphUpdateHz = 10  # Update rate of the animation
         self.coloredBin = None
         self.magnitudes = np.zeros((self.samples, self.binCount))
         # Tell numpy to ignore errors like taking the log of 0
         np.seterr(all='ignore')
         # Set up figure to hold plots
-        self.figure = Figure(figsize=(1024,768), dpi=72, facecolor=(1,1,1), edgecolor=(0,0,0))
+        self.figure = Figure(figsize=(1024, 768), dpi=72, facecolor=(1, 1, 1), edgecolor=(0, 0, 0))
         # Set up 4x4 grid to hold 2 plots and colorbar
-        gs = GridSpec(2, 2, height_ratios=[1,2], width_ratios=[9.5, 0.5])
+        gs = GridSpec(2, 2, height_ratios=[1, 2], width_ratios=[9.5, 0.5])
         gs.update(left=0.075, right=0.925, bottom=0.05, top=0.95, wspace=0.05)
         # Set up frequency histogram bar plot
         self.histAx = self.figure.add_subplot(gs[0])
@@ -44,7 +47,8 @@ class SpectrogramCanvas(FigureCanvas):
         self.histAx.set_ylabel('Intensity (decibels)')
         self.histAx.set_xlabel('Frequency Bin (hz)')
         self.histAx.set_xticks([])
-        self.histPlot = self.histAx.bar(np.arange(self.binCount), np.zeros(self.binCount), width=1.0, linewidth=0.0, facecolor='blue')
+        self.histPlot = self.histAx.bar(np.arange(self.binCount), np.zeros(self.binCount), width=1.0, linewidth=0.0,
+                                        facecolor='blue')
         # Set up spectrogram waterfall plot
         self.spectAx = self.figure.add_subplot(gs[2])
         self.spectAx.set_title('Spectrogram')
@@ -53,33 +57,35 @@ class SpectrogramCanvas(FigureCanvas):
         self.spectAx.set_xticks([])
         self.spectPlot = self.spectAx.imshow(self.magnitudes, aspect='auto', cmap=get_cmap('jet'))
         # Add formatter to translate position to age in seconds
-        self.spectAx.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: '%d' % (x*(1.0/self.graphUpdateHz))))
+        self.spectAx.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: '%d' % (x * (1.0 / self.graphUpdateHz))))
         # Set up spectrogram color bar
         cbAx = self.figure.add_subplot(gs[3])
-        self.figure.colorbar(self.spectPlot, cax=cbAx, use_gridspec=True, format=FuncFormatter(lambda x, pos: '%d' % (x*100.0)))
+        self.figure.colorbar(self.spectPlot, cax=cbAx, use_gridspec=True,
+                             format=FuncFormatter(lambda x, pos: '%d' % (x * 100.0)))
         cbAx.set_ylabel('Intensity (decibels)')
         # Initialize canvas
         super(SpectrogramCanvas, self).__init__(self.figure)
         # Hook up mouse and animation events
         self.mpl_connect('motion_notify_event', self._mouseMove)
-        self.ani = FuncAnimation(self.figure, self._update, interval=1000.0/self.graphUpdateHz, blit=False)
+        self.ani = FuncAnimation(self.figure, self._update, interval=1000.0 / self.graphUpdateHz, blit=False)
 
     def updateParameters(self, fftSize, sampleRate):
         """Update the FFT size and sample rate parameters to redraw the charts appropriately."""
         # Update variables to new values.
         self.fftSize = fftSize
         self.sampleRate = sampleRate
-        self.binCount = self.fftSize//2
-        self.binFreq = self.sampleRate/float(self.fftSize)
+        self.binCount = self.fftSize // 2
+        self.binFreq = self.sampleRate / float(self.fftSize)
         # Remove old bar plot.
         for bar in self.histPlot:
             bar.remove()
         # Update data for charts.
-        self.histPlot = self.histAx.bar(np.arange(self.binCount), np.zeros(self.binCount), width=1.0, linewidth=0.0, facecolor='blue')
+        self.histPlot = self.histAx.bar(np.arange(self.binCount), np.zeros(self.binCount), width=1.0, linewidth=0.0,
+                                        facecolor='blue')
         self.magnitudes = np.zeros((self.samples, self.binCount))
         # Update frequency x axis to have 5 evenly spaced ticks from 0 to sampleRate/2.
         ticks = np.floor(np.linspace(0, self.binCount, 5))
-        labels = ['%d hz' % i for i in np.linspace(0, self.sampleRate/2.0, 5)]
+        labels = ['%d hz' % i for i in np.linspace(0, self.sampleRate / 2.0, 5)]
         self.histAx.set_xticks(ticks)
         self.histAx.set_xticklabels(labels)
         self.spectAx.set_xticks(ticks)
@@ -88,14 +94,15 @@ class SpectrogramCanvas(FigureCanvas):
     def updateIntensityRange(self, low, high):
         """Adjust low and high intensity limits for histogram and spectrum axes."""
         self.histAx.set_ylim(bottom=low, top=high)
-        self.spectPlot.set_clim(low/100.0, high/100.0)
+        self.spectPlot.set_clim(low / 100.0, high / 100.0)
 
     def _mouseMove(self, event):
         # Update the selected frequency bin if the mouse is over a plot.
         # Check if sampleRate is not 0 so the status bar isn't updated if the spectrogram hasn't ever been started.
         if self.sampleRate != 0 and (event.inaxes == self.histAx or event.inaxes == self.spectAx):
             bin = int(event.xdata)
-            self.window.updateStatus('Frequency bin %d: %.0f hz to %.0f hz' % (bin, bin*self.binFreq, (bin+1)*self.binFreq))
+            self.window.updateStatus(
+                'Frequency bin %d: %.0f hz to %.0f hz' % (bin, bin * self.binFreq, (bin + 1) * self.binFreq))
             # Highlight selected frequency in red
             if self.coloredBin != None:
                 self.histPlot[self.coloredBin].set_facecolor('blue')
@@ -115,14 +122,14 @@ class SpectrogramCanvas(FigureCanvas):
             # the average power of the signal, and only grab the first half of values
             # because the second half is for negative frequencies (which don't apply
             # to an FFT run on real data).
-            mags = 20.0*np.log10(mags[1:len(mags)//2+1])
+            mags = 20.0 * np.log10(mags[1:len(mags) // 2 + 1])
             # Update histogram bar heights based on magnitudes.
             for bin, mag in zip(self.histPlot, mags):
                 bin.set_height(mag)
             # Roll samples forward and save the most recent sample.  Note that image
             # samples are scaled to 0 to 1.
             self.magnitudes = np.roll(self.magnitudes, 1, axis=0)
-            self.magnitudes[0] = mags/100.0
+            self.magnitudes[0] = mags / 100.0
             # Update spectrogram image data.
             self.spectPlot.set_array(self.magnitudes)
             return (self.histPlot, self.spectPlot)
@@ -142,9 +149,9 @@ class MainWindow(QMainWindow):
         main.setLayout(self._setupMainLayout())
         self.setCentralWidget(main)
         self.status = self.statusBar()
-        self.setGeometry(10,10,1024,768)
+        self.setGeometry(10, 10, 1024, 768)
         self.setWindowTitle(VERSION)
-        self._sliderChanged(0) # Force graphs to update their limits with initial values.
+        self._sliderChanged(0)  # Force graphs to update their limits with initial values.
         self.show()
 
     def closeEvent(self, event):
@@ -249,14 +256,9 @@ class MainWindow(QMainWindow):
         graphs.layout().addWidget(highSlider, 3, 0, 1, 2)
 
         modeCombo = QComboBox(self)
-        modeCombo.addItem("eACTIVE_MODE_S1")
-        modeCombo.addItem("eACTIVE_MODE_S2")
-        modeCombo.addItem("eACTIVE_MODE_S3")
-        modeCombo.addItem("eACTIVE_MODE_S4")
-        modeCombo.addItem("eACTIVE_MODE_S5")
-        modeCombo.addItem("eLISTEN_MODE")
-        modeCombo.addItem("eENV_DATA")
-        modeCombo.addItem("eCONTACT_DATA")
+        for mode, value in MODES.items():
+            modeCombo.addItem(mode)
+
         self.modeCombo = modeCombo
 
         switchModeBtn = QPushButton('Switch Mode')
@@ -269,12 +271,11 @@ class MainWindow(QMainWindow):
         mode.layout().addWidget(modeCombo, 0, 1)
         mode.layout().addWidget(switchModeBtn, 1, 1)
 
-
         return (device, parameters, graphs, mode)
 
     def _switchModeButton(self):
-        #do work
-        print("coolio")
+        # do work
+        self.openDevice.set_mode(MODES[self.modeCombo.currentText()])
 
     def _deviceButton(self):
         # Toggle between opening and closing the device.
@@ -288,7 +289,7 @@ class MainWindow(QMainWindow):
         dialog = QDialog(self)
         dialog.setModal(True)
         sampleRate = QSpinBox()
-        sampleRate.setRange(1,9000)
+        sampleRate.setRange(1, 9000)
         sampleRate.setValue(self.openDevice.get_samplerate())
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(dialog.accept)
@@ -328,7 +329,7 @@ class MainWindow(QMainWindow):
             self.deviceCombo.setDisabled(True)
             self.deviceBtn.setText('Close')
         except IOError as e:
-            self.updateStatus() # Clear status bar
+            self.updateStatus()  # Clear status bar
             self._communicationError(e)
 
     def _closeDevice(self):

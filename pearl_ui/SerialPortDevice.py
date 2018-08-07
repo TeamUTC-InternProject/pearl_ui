@@ -7,62 +7,68 @@
 import serial
 import serial.tools.list_ports
 
-from . SpectrogramDevice import *
-
+from .SpectrogramDevice import *
 
 TIMEOUT_SECONDS = 5
 PORT_BAUD_RATE = 38400
 
 
 class SerialPortDevice(SpectrogramDevice):
-	def __init__(self, path, name):
-		"""Create a serial port device with a path to the serial port and name of the device.
-		   Path and name should be values returned from calling enumerate_devices.
-		"""
-		self.path = path
-		self.name = name
+    def __init__(self, path, name):
+        """Create a serial port device with a path to the serial port and name of the device.
+           Path and name should be values returned from calling enumerate_devices.
+        """
+        self.path = path
+        self.name = name
 
-	def get_name(self):
-		"""Return device name based on serial port name."""
-		return self.name
+    def get_name(self):
+        """Return device name based on serial port name."""
+        return self.name
 
-	def get_fftsize(self):
-		"""Return device FFT size."""
-		return self.fftSize
+    def get_fftsize(self):
+        """Return device FFT size."""
+        return self.fftSize
 
-	def get_samplerate(self):
-		"""Return device sample rate in hertz."""
-		return self.sampleRate
+    def get_samplerate(self):
+        """Return device sample rate in hertz."""
+        return self.sampleRate
 
-	def set_samplerate(self, samplerate):
-		self.port.write(str.encode('SET SAMPLE_RATE_HZ %d;' % samplerate))
-		self.sampleRate = samplerate
+    def set_samplerate(self, samplerate):
+        self.port.write(str.encode('SET SAMPLE_RATE_HZ %d;' % samplerate))
+        self.sampleRate = samplerate
 
-	def get_magnitudes(self):
-		"""Return an array of FFT magnitudes.  The number of values returned is the same as the FFT size."""
-		self.port.write('GET MAGNITUDES;'.encode())
-		return [float(self._readline()) for i in range(self.fftSize)]
+    def set_mode(self, mode):
+        self.port.write(str.encode('SET MODE %d;' % mode))
+        self.mode = mode
 
-	def open(self):
-		"""Start communication with the device.  Must be done before any other calls are made to the device."""
-		self.port = serial.Serial(self.path, PORT_BAUD_RATE, timeout=TIMEOUT_SECONDS, writeTimeout=TIMEOUT_SECONDS)
-		# Read the initial state of the device
-		self.port.write('GET FFT_SIZE;'.encode())
-		self.fftSize = int(self._readline())
-		self.port.write('GET SAMPLE_RATE_HZ;'.encode())
-		self.sampleRate = int(self._readline())
+    def get_mode(self):
+        return self.mode
 
-	def close(self):
-		"""Close communication with the device."""
-		self.port.close()
+    def get_magnitudes(self):
+        """Return an array of FFT magnitudes.  The number of values returned is the same as the FFT size."""
+        self.port.write('GET MAGNITUDES;'.encode())
+        return [float(self._readline()) for i in range(self.fftSize)]
 
-	def _readline(self):
-		value = self.port.readline()
-		if value == None or value == '':
-			raise IOError('Timeout exceeded while waiting for device to respond.')
-		return value
+    def open(self):
+        """Start communication with the device.  Must be done before any other calls are made to the device."""
+        self.port = serial.Serial(self.path, PORT_BAUD_RATE, timeout=TIMEOUT_SECONDS, writeTimeout=TIMEOUT_SECONDS)
+        # Read the initial state of the device
+        self.port.write('GET FFT_SIZE;'.encode())
+        self.fftSize = int(self._readline())
+        self.port.write('GET SAMPLE_RATE_HZ;'.encode())
+        self.sampleRate = int(self._readline())
+
+    def close(self):
+        """Close communication with the device."""
+        self.port.close()
+
+    def _readline(self):
+        value = self.port.readline()
+        if value == None or value == '':
+            raise IOError('Timeout exceeded while waiting for device to respond.')
+        return value
 
 
 def enumerate_devices():
-	"""Enumerate all the serial ports."""
-	return [SerialPortDevice(port[0], port[1]) for port in serial.tools.list_ports.comports() if port[2] != 'n/a']
+    """Enumerate all the serial ports."""
+    return [SerialPortDevice(port[0], port[1]) for port in serial.tools.list_ports.comports() if port[2] != 'n/a']

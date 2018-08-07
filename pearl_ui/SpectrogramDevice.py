@@ -27,6 +27,14 @@ class SpectrogramDevice(object):
         """Set the device's sample rate to the specified frequency in hertz."""
         raise NotImplementedError()
 
+    def get_mode(self):
+        """Return device's mode #"""
+        raise NotImplementedError()
+
+    def set_mode(self, mode):
+        """Set the device's mode."""
+        raise NotImplementedError()
+
     def get_magnitudes(self):
         """Return a list of magnitudes from an FFT run on the device.
            The size of the returned magnitude list should be the sample
