@@ -2,7 +2,7 @@
 # Copyright 2013 Tony DiCola (tony@tonydicola.com)
 
 # This is a concrete implementation of SpectrogramDevice to define communication
-# with a serial port-based spectrogram device. 
+# with a serial port-based spectrogram device.
 
 import serial
 import serial.tools.list_ports
@@ -44,7 +44,7 @@ class SerialPortDevice(SpectrogramDevice):
     def get_mode(self):
         """Return device mode"""
         self.port.write('GET MODE;'.encode())
-        return self.port.readline()
+        return self.port.readline().decode('utf-8').rstrip('\r\n')
 
     def get_magnitudes(self):
         """Return an array of FFT magnitudes.  The number of values returned is the same as the FFT size."""

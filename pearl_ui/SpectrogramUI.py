@@ -139,7 +139,7 @@ class SpectrogramCanvas(FigureCanvas):
 
 class MainWindow(QMainWindow):
     def __init__(self, devices):
-        """Set up the main window.  
+        """Set up the main window.
            Devices should be a list of items that implement the SpectrogramDevice interface.
         """
         super(MainWindow, self).__init__()
@@ -165,7 +165,7 @@ class MainWindow(QMainWindow):
         self.status.showMessage(message)
 
     def getMagnitudes(self):
-        """Get a list of magnitudes if the device is open, or None if the device is not open.  
+        """Get a list of magnitudes if the device is open, or None if the device is not open.
            There are FFT size number of magnitudes.
         """
         try:
@@ -203,7 +203,7 @@ class MainWindow(QMainWindow):
         return layout
 
     def _setupControls(self):
-        # Set up device group        
+        # Set up device group
         deviceCombo = QComboBox()
         for device in sorted(self.devices, key=lambda a: a.get_name()):
             deviceCombo.addItem(device.get_name(), userData=device)
@@ -280,9 +280,12 @@ class MainWindow(QMainWindow):
     def _switchModeButton(self):
         # do work
         #print(MODES[self.modeCombo.currentText()])
-        print(self.openDevice.get_mode())
-        self.currentMode.setText(self.modeCombo.currentText())
+        #print(self.openDevice.get_mode())
+
         self.openDevice.set_mode(MODES[self.modeCombo.currentText()])
+        mode = self.openDevice.get_mode();
+        if mode == '2':
+            self.currentMode.setText("eACTIVE_MODE_S2")
 
     def _deviceButton(self):
         # Toggle between opening and closing the device.
