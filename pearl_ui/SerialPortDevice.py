@@ -42,7 +42,9 @@ class SerialPortDevice(SpectrogramDevice):
         self.mode = mode
 
     def get_mode(self):
-        return self.mode
+        """Return device mode"""
+        self.port.write('GET MODE;'.encode())
+        return self.port.readline()
 
     def get_magnitudes(self):
         """Return an array of FFT magnitudes.  The number of values returned is the same as the FFT size."""

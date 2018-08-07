@@ -280,6 +280,7 @@ class MainWindow(QMainWindow):
     def _switchModeButton(self):
         # do work
         #print(MODES[self.modeCombo.currentText()])
+        print(self.openDevice.get_mode())
         self.currentMode.setText(self.modeCombo.currentText())
         self.openDevice.set_mode(MODES[self.modeCombo.currentText()])
 
