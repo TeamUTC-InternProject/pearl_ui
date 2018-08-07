@@ -264,17 +264,23 @@ class MainWindow(QMainWindow):
         switchModeBtn = QPushButton('Switch Mode')
         switchModeBtn.clicked.connect(self._switchModeButton)
         self.switchModeBtn = switchModeBtn
+        self.currentMode = QLabel("eACTIVE_MODE_S1")
+
 
         mode = QGroupBox('Modes')
         mode.setLayout(QGridLayout())
-        mode.layout().addWidget(QLabel('Mode:'), 0, 0)
-        mode.layout().addWidget(modeCombo, 0, 1)
-        mode.layout().addWidget(switchModeBtn, 1, 1)
+        mode.layout().addWidget(QLabel('Current Mode:'), 0, 0)
+        mode.layout().addWidget(self.currentMode, 0, 1)
+        mode.layout().addWidget(QLabel('Desired Mode:'), 1, 0)
+        mode.layout().addWidget(modeCombo, 1, 1)
+        mode.layout().addWidget(switchModeBtn, 2, 0, 1, 2)
 
         return (device, parameters, graphs, mode)
 
     def _switchModeButton(self):
         # do work
+        #print(MODES[self.modeCombo.currentText()])
+        self.currentMode.setText(self.modeCombo.currentText())
         self.openDevice.set_mode(MODES[self.modeCombo.currentText()])
 
     def _deviceButton(self):
