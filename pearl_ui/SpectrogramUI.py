@@ -17,8 +17,8 @@ from matplotlib.ticker import MultipleLocator, FuncFormatter
 
 # Add global version number/name
 VERSION = 'Pearl v0.1'
-MODES = {"eACTIVE_MODE_S1": 1, "eACTIVE_MODE_S2": 2, "eACTIVE_MODE_S3": 3, "eACTIVE_MODE_S4": 4,
-              "eACTIVE_MODE_S5": 5, "eLISTEN_MODE": 6, "eENV_DATA": 7, "eCONTACT_DATA": 8}
+MODES = ["eACTIVE_MODE_S1", "eACTIVE_MODE_S2", "eACTIVE_MODE_S3", "eACTIVE_MODE_S4",
+              "eACTIVE_MODE_S5", "eLISTEN_MODE", "eENV_DATA", "eCONTACT_DATA"]
 
 
 class SpectrogramCanvas(FigureCanvas):
@@ -256,7 +256,7 @@ class MainWindow(QMainWindow):
         graphs.layout().addWidget(highSlider, 3, 0, 1, 2)
 
         modeCombo = QComboBox(self)
-        for mode, value in MODES.items():
+        for mode in MODES:
             modeCombo.addItem(mode)
 
         self.modeCombo = modeCombo
@@ -279,13 +279,9 @@ class MainWindow(QMainWindow):
 
     def _switchModeButton(self):
         # do work
-        #print(MODES[self.modeCombo.currentText()])
-        #print(self.openDevice.get_mode())
-
-        self.openDevice.set_mode(MODES[self.modeCombo.currentText()])
-        mode = self.openDevice.get_mode();
-        if mode == '2':
-            self.currentMode.setText("eACTIVE_MODE_S2")
+        self.openDevice.set_mode(MODES.index(self.modeCombo.currentText()))
+        mode = MODES[self.openDevice.get_mode()]
+        self.currentMode.setText(mode)
 
     def _deviceButton(self):
         # Toggle between opening and closing the device.
