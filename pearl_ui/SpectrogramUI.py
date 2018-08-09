@@ -263,25 +263,33 @@ class MainWindow(QMainWindow):
 
         switchModeBtn = QPushButton('Switch Mode')
         switchModeBtn.clicked.connect(self._switchModeButton)
+        testbtn = QPushButton("test")
+        testbtn.clicked.connect(self._testbutton)
+        self.testbutton = testbtn
         self.switchModeBtn = switchModeBtn
         self.currentMode = QLabel("eACTIVE_MODE_S1")
-
+        self.nextMode = QLabel("eACTIVE_MODE_S1")
 
         mode = QGroupBox('Modes')
         mode.setLayout(QGridLayout())
         mode.layout().addWidget(QLabel('Current Mode:'), 0, 0)
         mode.layout().addWidget(self.currentMode, 0, 1)
-        mode.layout().addWidget(QLabel('Desired Mode:'), 1, 0)
-        mode.layout().addWidget(modeCombo, 1, 1)
-        mode.layout().addWidget(switchModeBtn, 2, 0, 1, 2)
+        mode.layout().addWidget(QLabel('Next Mode:'), 1, 0)
+        mode.layout().addWidget(self.nextMode, 1, 1)
+        mode.layout().addWidget(QLabel('Desired Mode:'), 2, 0)
+        mode.layout().addWidget(modeCombo, 2, 1)
+        mode.layout().addWidget(switchModeBtn, 3, 0, 1, 2)
+        mode.layout().addWidget(testbtn, 4, 0, 1, 2)
 
         return (device, parameters, graphs, mode)
 
+    def _testbutton(self):
+        self._updateDeviceUI()
+
     def _switchModeButton(self):
         # do work
-        self.openDevice.set_mode(MODES.index(self.modeCombo.currentText()))
-        mode = MODES[self.openDevice.get_mode()]
-        self.currentMode.setText(mode)
+        self.openDevice.set_mode(MODES.index(self.modeCombo.currentText()) + 1)
+        self.nextMode.setText(self.modeCombo.currentText())
 
     def _deviceButton(self):
         # Toggle between opening and closing the device.
@@ -320,6 +328,8 @@ class MainWindow(QMainWindow):
         self.fftSize.setText('%d' % fftSize)
         self.sampleRate.setText('%d hz' % sampleRate)
         self.spectrogram.updateParameters(fftSize, sampleRate)
+        self.currentMode.setText(self.openDevice.get_mode())
+        self.nextMode.setText(self.openDevice.get_mode())
 
     def _openDevice(self):
         try:
