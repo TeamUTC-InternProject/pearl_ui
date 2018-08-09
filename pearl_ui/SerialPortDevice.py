@@ -43,7 +43,7 @@ class SerialPortDevice(SpectrogramDevice):
 
     def get_mode(self):
         """Return device mode"""
-        self.port.write('GET MODE;'.encode())
+        self.port.write('GET CURRENT_MODE;'.encode())
         return self.port.readline().decode('utf-8').rstrip('\r\n')
 
     def get_magnitudes(self):

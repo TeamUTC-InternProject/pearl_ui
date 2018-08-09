@@ -43,7 +43,7 @@ AudioConnection patchCord2(playRaw1, dac1);
 // These values can be changed to alter the behavior of the spectrum display.
 ////////////////////////////////////////////////////////////////////////////////
 
-int currentMode = 6;
+int CURRENT_MODE = 6;
 int MODE = 6;
 int NEXTMODE = 6;
 int SAMPLE_RATE_HZ = 9000;             // Sample rate of the audio in hertz.
@@ -185,7 +185,7 @@ void loop() {
   // check to see if it's time to change the state
   unsigned long currentMillis = millis();
 
-  switch (currentMode) {
+  switch (CURRENT_MODE) {
   case 1:
     if ((state == PASSIVE) && (currentMillis - previousMillis >= 20000))
     {
@@ -198,9 +198,9 @@ void loop() {
       if (NEXTMODE != LISTEN_MODE)      
         playRaw1.play("wav1.raw");
       // update mode
-      if (NEXTMODE != currentMode) {
-        currentMode = NEXTMODE;
-        Serial2.write(currentMode);
+      if (NEXTMODE != CURRENT_MODE) {
+        CURRENT_MODE = NEXTMODE;
+        Serial2.write(CURRENT_MODE);
       }
     }
     else if ((state == ACTIVE) && !playRaw1.isPlaying())
@@ -227,9 +227,9 @@ void loop() {
       if (NEXTMODE != LISTEN_MODE)        
         playRaw1.play("wav2.raw");
       // update mode
-      if (NEXTMODE != currentMode) {
-        currentMode = NEXTMODE;
-        Serial2.write(currentMode);
+      if (NEXTMODE != CURRENT_MODE) {
+        CURRENT_MODE = NEXTMODE;
+        Serial2.write(CURRENT_MODE);
       }
     }
     else if ((state == ACTIVE) && !playRaw1.isPlaying())
@@ -256,9 +256,9 @@ void loop() {
       if (NEXTMODE != LISTEN_MODE)      
         playRaw1.play("wav3.raw");
       // update mode
-      if (NEXTMODE != currentMode) {
-        currentMode = NEXTMODE;
-        Serial2.write(currentMode);
+      if (NEXTMODE != CURRENT_MODE) {
+        CURRENT_MODE = NEXTMODE;
+        Serial2.write(CURRENT_MODE);
       }
     }
     else if ((state == ACTIVE) && !playRaw1.isPlaying())
@@ -285,9 +285,9 @@ void loop() {
       if (NEXTMODE != LISTEN_MODE)
         playRaw1.play("wav4.raw");
       // update mode
-      if (NEXTMODE != currentMode) {
-        currentMode = NEXTMODE;
-        Serial2.write(currentMode);
+      if (NEXTMODE != CURRENT_MODE) {
+        CURRENT_MODE = NEXTMODE;
+        Serial2.write(CURRENT_MODE);
       }
     }
     else if ((state == ACTIVE) && !playRaw1.isPlaying())
@@ -314,9 +314,9 @@ void loop() {
       if (NEXTMODE != LISTEN_MODE)
         playRaw1.play("wav5.raw");
       // update mode
-      if (NEXTMODE != currentMode) {
-        currentMode = NEXTMODE;
-        Serial2.write(currentMode);
+      if (NEXTMODE != CURRENT_MODE) {
+        CURRENT_MODE = NEXTMODE;
+        Serial2.write(CURRENT_MODE);
       }
     }
     else if ((state == ACTIVE) && !playRaw1.isPlaying())
@@ -338,9 +338,9 @@ void loop() {
     digitalWrite(p_ledPin, p_ledState);
     digitalWrite(a_ledPin, a_ledState);  
     // update mode
-    if (NEXTMODE != currentMode) {
-      currentMode = NEXTMODE;
-      Serial2.write(currentMode);
+    if (NEXTMODE != CURRENT_MODE) {
+      CURRENT_MODE = NEXTMODE;
+      Serial2.write(CURRENT_MODE);
     }
     break;
   default:
@@ -549,6 +549,10 @@ void parseCommand(char* command) {
   else if (strcmp(command, "GET FFT_SIZE") == 0) {
     Serial.println(FFT_SIZE);
   }
+  else if (strcmp(command, "GET CURRENT_MODE") == 0){
+    Serial.println(CURRENT_MODE);
+  }
+  GET_AND_SET(CURRENT_MODE)
   GET_AND_SET(MODE)
   GET_AND_SET(SAMPLE_RATE_HZ)
   GET_AND_SET(LEDS_ENABLED)
@@ -560,7 +564,7 @@ void parseCommand(char* command) {
     spectrumSetup();
   }
   else if (strstr(command, "SET MODE ") != NULL) {
-    NEXTMODE = MODE + 1;
+    NEXTMODE = MODE;
   }
   
   // Turn off the LEDs if the state changed.

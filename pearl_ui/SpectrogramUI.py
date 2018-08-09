@@ -267,8 +267,8 @@ class MainWindow(QMainWindow):
         testbtn.clicked.connect(self._testbutton)
         self.testbutton = testbtn
         self.switchModeBtn = switchModeBtn
-        self.currentMode = QLabel("eACTIVE_MODE_S1")
-        self.nextMode = QLabel("eACTIVE_MODE_S1")
+        self.currentMode = QLabel(MODES[5])
+        self.nextMode = QLabel(MODES[5])
 
         mode = QGroupBox('Modes')
         mode.setLayout(QGridLayout())
@@ -328,8 +328,8 @@ class MainWindow(QMainWindow):
         self.fftSize.setText('%d' % fftSize)
         self.sampleRate.setText('%d hz' % sampleRate)
         self.spectrogram.updateParameters(fftSize, sampleRate)
-        self.currentMode.setText(self.openDevice.get_mode())
-        self.nextMode.setText(self.openDevice.get_mode())
+        self.currentMode.setText(MODES[int(self.openDevice.get_mode())-1])
+        self.nextMode.setText(MODES[int(self.openDevice.get_mode())-1])
 
     def _openDevice(self):
         try:
